@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Generate the GarageTime AppIcon master (1024x1024 PNG, NO alpha).
+Generate the Garage Time AppIcon master (1024x1024 PNG, NO alpha).
 
-Design: a chunky combination wrench laid diagonally across an open book.
-- Background: brand near-black with subtle vignette
-- Book: cream pages opening like a wedge, dark spine, soft text rules
-- Wrench: brake-light amber with true transparent cutouts — the book pages
-  show through the loop end and the open jaw
+Design: a clock face with a stylized wrench as the hour hand.
+- Dark background with subtle radial vignette
+- Cream clock face with 12 tick marks (4 long, 8 short)
+- Thin gray minute hand pointing up-left (~11 o'clock)
+- Bold amber wrench acting as the hour hand, pointing down-right (~4 o'clock)
+- Center hub disc with a tiny amber dot
 
-Apple's icon mask rounds the corners automatically (we draw a flat square).
-Apple rejects icons with an alpha channel, so the output is RGB.
+Apple's icon mask rounds the corners automatically; output is RGB (no alpha).
 """
 from __future__ import annotations
 import math
 import pathlib
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter, ImageChops
 
 SIZE = 1024
 OUT_DIR = pathlib.Path(__file__).resolve().parent.parent / "GarageTime" / "Assets.xcassets" / "AppIcon.appiconset"
@@ -23,17 +23,17 @@ OUT_PATH = OUT_DIR / "icon-1024.png"
 # Brand palette
 BG_OUTER       = (10, 10, 12)
 BG_INNER       = (34, 32, 38)
-PAGE           = (244, 240, 228)
-PAGE_EDGE      = (215, 205, 185)
-PAGE_DEEP      = (175, 162, 142)
-SPINE_DARK     = (28, 22, 18)
-RULES          = (160, 148, 128)
+FACE           = (244, 240, 228)
+FACE_EDGE      = (210, 200, 180)
+FACE_DEEP      = (170, 158, 138)
+TICK_MAJOR     = (40, 32, 28)
+TICK_MINOR     = (110, 100, 90)
+HUB_DARK       = (32, 24, 20)
+MINUTE_HAND    = (90, 86, 80)
 WRENCH         = (255, 107, 53)
 WRENCH_SHADE   = (200, 70, 30)
 WRENCH_HI      = (255, 180, 140)
 
-
-# ---------- background ----------
 
 def draw_background() -> Image.Image:
     img = Image.new("RGB", (SIZE, SIZE), BG_OUTER)
@@ -54,280 +54,200 @@ def draw_background() -> Image.Image:
     return img
 
 
-# ---------- book ----------
-
-def draw_book() -> Image.Image:
-    """Open book seen from slightly above. RGBA so we can composite on the bg."""
+def draw_clock_face() -> Image.Image:
     layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
-
     cx, cy = SIZE / 2, SIZE / 2
-    half_w = SIZE * 0.42
-    half_h = SIZE * 0.30
-    perspective = SIZE * 0.05    # top tucks inward
+    radius = SIZE * 0.40
 
-    # Drop shadow first — a soft fuzzy oval below the book
+    # Soft drop shadow under the dial
     shadow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow)
     sd.ellipse(
-        [cx - half_w * 1.05, cy + half_h - 10,
-         cx + half_w * 1.05, cy + half_h + 60],
-        fill=(0, 0, 0, 180),
+        [cx - radius - 6, cy - radius - 6 + 18,
+         cx + radius + 6, cy + radius + 6 + 18],
+        fill=(0, 0, 0, 200),
     )
-    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=22))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=24))
     layer.alpha_composite(shadow)
 
-    # Page-stack edge under each page (gives the book real thickness)
-    edge_drop = 16
-    stack_layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    sld = ImageDraw.Draw(stack_layer)
-    for d_offset in range(edge_drop, 0, -2):
-        t = d_offset / edge_drop
-        col_l = (
-            int(PAGE_DEEP[0] + (PAGE_EDGE[0] - PAGE_DEEP[0]) * (1 - t)),
-            int(PAGE_DEEP[1] + (PAGE_EDGE[1] - PAGE_DEEP[1]) * (1 - t)),
-            int(PAGE_DEEP[2] + (PAGE_EDGE[2] - PAGE_DEEP[2]) * (1 - t)),
+    # Concentric bezel rings (subtle 3D edge)
+    for inset in range(0, 12, 2):
+        ring_r = radius + 6 - inset
+        t = inset / 12
+        col = (
+            int(FACE_DEEP[0] + (FACE_EDGE[0] - FACE_DEEP[0]) * t),
+            int(FACE_DEEP[1] + (FACE_EDGE[1] - FACE_DEEP[1]) * t),
+            int(FACE_DEEP[2] + (FACE_EDGE[2] - FACE_DEEP[2]) * t),
             255,
         )
-        left_stack = [
-            (cx - half_w * 1.02, cy + half_h + d_offset),
-            (cx,                  cy + half_h * 0.92 + d_offset),
-            (cx,                  cy + half_h * 0.92),
-            (cx - half_w * 1.02,  cy + half_h),
-        ]
-        right_stack = [
-            (cx,                  cy + half_h * 0.92 + d_offset),
-            (cx + half_w * 1.02,  cy + half_h + d_offset),
-            (cx + half_w * 1.02,  cy + half_h),
-            (cx,                  cy + half_h * 0.92),
-        ]
-        sld.polygon(left_stack, fill=col_l)
-        sld.polygon(right_stack, fill=col_l)
-    layer.alpha_composite(stack_layer)
+        d.ellipse([cx - ring_r, cy - ring_r, cx + ring_r, cy + ring_r], fill=col)
 
-    # Top page surfaces
-    left_page = [
-        (cx - half_w * 1.02, cy + half_h),
-        (cx,                  cy + half_h * 0.92),
-        (cx,                  cy - half_h * 0.96 + 6),
-        (cx - half_w + perspective, cy - half_h + 6),
-    ]
-    right_page = [
-        (cx,                  cy + half_h * 0.92),
-        (cx + half_w * 1.02,  cy + half_h),
-        (cx + half_w - perspective, cy - half_h + 6),
-        (cx,                  cy - half_h * 0.96 + 6),
-    ]
-    d.polygon(left_page, fill=PAGE)
-    d.polygon(right_page, fill=PAGE)
+    # Main face
+    d.ellipse([cx - radius, cy - radius, cx + radius, cy + radius], fill=FACE)
 
-    # (No outer page-curl shading — looked like a stray triangle.)
-
-    # Center spine — darker valley
-    spine_layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    sl = ImageDraw.Draw(spine_layer)
-    sl.polygon([
-        (cx - 14, cy - half_h * 0.96 + 6),
-        (cx + 14, cy - half_h * 0.96 + 6),
-        (cx + 10, cy + half_h * 0.92),
-        (cx - 10, cy + half_h * 0.92),
-    ], fill=(0, 0, 0, 90))
-    sl.line(
-        [(cx, cy - half_h * 0.96 + 6), (cx, cy + half_h * 0.92)],
-        fill=SPINE_DARK, width=4
-    )
-    layer.alpha_composite(spine_layer)
-
-    # Text rules — subtle horizontal lines on both pages
-    rule_count = 6
-    rule_pad_x = half_w * 0.18
-    top_pad = half_h * 0.34
-    bottom_pad = half_h * 0.18
-    rule_h_span = half_h * 1.86
-    rule_color = (*RULES, 180)
-    for i in range(rule_count):
-        t = i / max(rule_count - 1, 1)
-        y = cy - rule_h_span / 2 + top_pad + t * (rule_h_span - top_pad - bottom_pad)
-        # Left
-        d.line(
-            [(cx - half_w + rule_pad_x + perspective * (1 - t * 0.5), y),
-             (cx - rule_pad_x * 0.6, y)],
-            fill=rule_color, width=5
-        )
-        # Right
-        d.line(
-            [(cx + rule_pad_x * 0.6, y),
-             (cx + half_w - rule_pad_x - perspective * (1 - t * 0.5), y)],
-            fill=rule_color, width=5
-        )
+    # 12 tick marks (long at 12/3/6/9, short elsewhere)
+    tick_outer_r = radius - 18
+    long_inner_r = radius - 64
+    short_inner_r = radius - 42
+    for i in range(12):
+        angle_deg = i * 30 - 90
+        rad = math.radians(angle_deg)
+        cos_a, sin_a = math.cos(rad), math.sin(rad)
+        is_major = (i % 3 == 0)
+        inner_r = long_inner_r if is_major else short_inner_r
+        color = TICK_MAJOR if is_major else TICK_MINOR
+        width = 14 if is_major else 7
+        x1 = cx + cos_a * tick_outer_r
+        y1 = cy + sin_a * tick_outer_r
+        x2 = cx + cos_a * inner_r
+        y2 = cy + sin_a * inner_r
+        d.line([(x1, y1), (x2, y2)], fill=color, width=width)
 
     return layer
 
 
-# ---------- wrench (with true transparent cutouts) ----------
+def draw_minute_hand() -> Image.Image:
+    """Thin gray hand pointing at ~11 o'clock — composes nicely with the 4 o'clock wrench."""
+    layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    cx, cy = SIZE / 2, SIZE / 2
 
-def draw_wrench(angle_deg: float = -30) -> Image.Image:
-    """Returns an RGBA layer the size of SIZE x SIZE with a chunky combo wrench."""
-    # Work in an oversized buffer so rotation doesn't clip
+    # 11 o'clock = 330° on the clock = -30° from "12 up".
+    # Convert to screen coordinates (0° = right, +y = down).
+    clock_deg = -30
+    rad = math.radians(clock_deg - 90)
+    length = SIZE * 0.34                 # slightly longer than the wrench (minute > hour convention)
+    tail = SIZE * 0.025
+    x_tip = cx + math.cos(rad) * length
+    y_tip = cy + math.sin(rad) * length
+    x_back = cx - math.cos(rad) * tail
+    y_back = cy - math.sin(rad) * tail
+
+    # Drop shadow
+    sh = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(sh)
+    sd.line([(x_back + 4, y_back + 4), (x_tip + 4, y_tip + 4)],
+            fill=(0, 0, 0, 180), width=20)
+    sh = sh.filter(ImageFilter.GaussianBlur(radius=6))
+    layer.alpha_composite(sh)
+
+    d.line([(x_back, y_back), (x_tip, y_tip)], fill=MINUTE_HAND, width=18)
+    tip_r = 9
+    d.ellipse([x_tip - tip_r, y_tip - tip_r, x_tip + tip_r, y_tip + tip_r], fill=MINUTE_HAND)
+    return layer
+
+
+def draw_wrench_hand() -> Image.Image:
+    """Bold amber wrench used as the hour hand. Pivots at the clock center,
+    head pointing at ~4 o'clock."""
     buf = int(SIZE * 1.4)
     cx, cy = buf / 2, buf / 2
 
-    # Dimensions
-    handle_len = SIZE * 0.78
-    handle_thick = SIZE * 0.095
-    closed_outer = SIZE * 0.14
-    closed_inner = closed_outer * 0.55
-    open_outer = SIZE * 0.14
-    jaw_gap = open_outer * 0.55      # opening width
-    jaw_depth = open_outer * 1.05     # how deep the notch cuts
+    total_length = SIZE * 0.32          # fits inside the 0.40-radius dial
+    handle_thick = SIZE * 0.058
+    head_outer = SIZE * 0.072
+    head_inner_hex = head_outer * 0.55
 
-    x_left = cx - handle_len / 2
-    x_right = cx + handle_len / 2
+    # Horizontal frame: pivot at center (cx,cy), head on the right tip.
+    # No tail behind the pivot — the hub disc covers that end.
+    x_left = cx
+    x_right = cx + total_length
 
-    # Build the wrench SOLID shape on its own RGBA layer (no cutouts yet)
     solid = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
     sd = ImageDraw.Draw(solid)
 
-    # Handle as rounded rectangle
+    # Handle
     sd.rounded_rectangle(
-        [x_left + closed_outer * 0.5, cy - handle_thick / 2,
-         x_right - open_outer * 0.5,  cy + handle_thick / 2],
+        [x_left, cy - handle_thick / 2,
+         x_right - head_outer * 0.5, cy + handle_thick / 2],
         radius=handle_thick / 2,
         fill=WRENCH,
     )
-
-    # CLOSED loop end (left) — solid disc
-    closed_cx = x_left + closed_outer * 0.85
-    closed_cy = cy
+    # Head disc
+    head_cx = x_right - head_outer * 0.30
+    head_cy = cy
     sd.ellipse(
-        [closed_cx - closed_outer, closed_cy - closed_outer,
-         closed_cx + closed_outer, closed_cy + closed_outer],
+        [head_cx - head_outer, head_cy - head_outer,
+         head_cx + head_outer, head_cy + head_outer],
         fill=WRENCH,
     )
 
-    # OPEN jaw end (right) — chunky D-shape so the slot reads as a slot, not a Pac-Man bite
-    jaw_cx = x_right - open_outer * 0.85
-    jaw_cy = cy
-    # Main body: a slightly-flattened oval (taller than wide gives the open-end-wrench look)
-    sd.ellipse(
-        [jaw_cx - open_outer * 0.95, jaw_cy - open_outer * 1.05,
-         jaw_cx + open_outer * 0.95, jaw_cy + open_outer * 1.05],
-        fill=WRENCH,
-    )
-    # Fill in the corner toward the handle so it joins cleanly
-    sd.rectangle(
-        [jaw_cx - open_outer * 0.95, jaw_cy - handle_thick * 0.95,
-         jaw_cx,                      jaw_cy + handle_thick * 0.95],
-        fill=WRENCH,
-    )
-
-    # Now build CUTOUT mask — black where wrench should be holed out
+    # Hex cutout in the head (true alpha — face shows through)
     mask = Image.new("L", (buf, buf), 0)
     md = ImageDraw.Draw(mask)
-    # Hex hole at closed end
     hex_pts = []
     for i in range(12):
-        a = math.radians(i * (360 / 12) + 15)
-        hex_pts.append((closed_cx + math.cos(a) * closed_inner,
-                        closed_cy + math.sin(a) * closed_inner))
+        a = math.radians(i * 30 + 15)
+        hex_pts.append((head_cx + math.cos(a) * head_inner_hex,
+                        head_cy + math.sin(a) * head_inner_hex))
     md.polygon(hex_pts, fill=255)
-    # Open jaw slot — a clean rectangular notch cut from the far (right) edge
-    # toward the handle. Bigger gap + deeper cut so the two prongs read at small sizes.
-    slot_width = open_outer * 0.72          # gap between the two prongs
-    slot_depth = open_outer * 1.30          # how deep into the head it cuts
-    slot_outer_x = jaw_cx + open_outer * 1.40   # well past the edge so the cut breaks the silhouette
-    slot_inner_x = slot_outer_x - slot_depth
-    md.rounded_rectangle(
-        [slot_inner_x, jaw_cy - slot_width / 2,
-         slot_outer_x, jaw_cy + slot_width / 2],
-        radius=slot_width * 0.12,
-        fill=255,
-    )
+    inverted = mask.point(lambda v: 255 - v)
+    solid.putalpha(ImageChops.multiply(solid.split()[3], inverted))
 
-    # Apply cutouts by zeroing alpha where mask is set
-    solid_alpha = solid.split()[3]
-    # New alpha = solid_alpha AND NOT mask
-    inverted_mask = mask.point(lambda v: 255 - v)
-    combined_alpha = Image.eval(solid_alpha, lambda v: v)
-    # Multiply alpha by inverted mask
-    new_alpha = Image.new("L", (buf, buf), 0)
-    for src_band, mask_band in [(solid_alpha, inverted_mask)]:
-        # PIL: ImageChops.multiply is on Images, so wrap
-        from PIL import ImageChops
-        new_alpha = ImageChops.multiply(src_band, mask_band)
-    solid.putalpha(new_alpha)
-
-    # SHADING: a darker band along the bottom edge of the handle for volume
-    shade_layer = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
-    sl = ImageDraw.Draw(shade_layer)
-    sl.rectangle(
-        [x_left + closed_outer * 0.3, cy + handle_thick / 2 - handle_thick * 0.32,
-         x_right - open_outer * 0.3,  cy + handle_thick / 2],
+    # Shading band (volume on the bottom edge)
+    shade = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
+    sh_d = ImageDraw.Draw(shade)
+    sh_d.rectangle(
+        [x_left + 4, cy + handle_thick / 2 - handle_thick * 0.32,
+         x_right - head_outer * 0.4, cy + handle_thick / 2],
         fill=WRENCH_SHADE,
     )
-    # Clip the shading to the wrench shape
-    shade_layer = clip_to_alpha(shade_layer, solid.split()[3])
-    solid.alpha_composite(shade_layer)
+    shade.putalpha(ImageChops.multiply(shade.split()[3], solid.split()[3]))
+    solid.alpha_composite(shade)
 
-    # HIGHLIGHT band along top edge
-    hl_layer = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
-    hl = ImageDraw.Draw(hl_layer)
-    hl.rectangle(
-        [x_left + closed_outer * 0.3, cy - handle_thick / 2,
-         x_right - open_outer * 0.3,  cy - handle_thick / 2 + handle_thick * 0.18],
+    # Highlight band (top edge)
+    hl = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
+    hl_d = ImageDraw.Draw(hl)
+    hl_d.rectangle(
+        [x_left + 4, cy - handle_thick / 2,
+         x_right - head_outer * 0.4, cy - handle_thick / 2 + handle_thick * 0.18],
         fill=WRENCH_HI,
     )
-    hl_layer = clip_to_alpha(hl_layer, solid.split()[3])
-    solid.alpha_composite(hl_layer)
+    hl.putalpha(ImageChops.multiply(hl.split()[3], solid.split()[3]))
+    solid.alpha_composite(hl)
 
-    # DROP SHADOW — soft black underneath
-    shadow_src = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
-    ss = ImageDraw.Draw(shadow_src)
-    # Paint the solid shape silhouette
-    ss.bitmap((0, 0), solid.split()[3].convert("L"), fill=(0, 0, 0, 220))
-    # Better: just composite solid alpha as shadow
-    shadow_src = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
-    shadow_src.putalpha(solid.split()[3].point(lambda v: int(v * 0.78)))
-    # Apply pure black RGB
+    # Drop shadow
     shadow_solid = Image.new("RGBA", (buf, buf), (0, 0, 0, 255))
-    shadow_solid.putalpha(solid.split()[3].point(lambda v: int(v * 0.7)))
-    shadow_blurred = shadow_solid.filter(ImageFilter.GaussianBlur(radius=22))
+    shadow_solid.putalpha(solid.split()[3].point(lambda v: int(v * 0.78)))
+    shadow_blurred = shadow_solid.filter(ImageFilter.GaussianBlur(radius=18))
 
-    # Composite: shadow (offset) under the wrench
-    offset = int(SIZE * 0.018)
     final_buf = Image.new("RGBA", (buf, buf), (0, 0, 0, 0))
+    offset = int(SIZE * 0.014)
     final_buf.alpha_composite(shadow_blurred, (offset, offset))
     final_buf.alpha_composite(solid)
 
-    # Rotate
-    rotated = final_buf.rotate(angle_deg, resample=Image.BICUBIC)
+    # Rotate to point at 4 o'clock. On a clock, 4 o'clock is 120° clockwise from
+    # 12 = 30° clockwise from 3 o'clock (right). In PIL (positive = counterclockwise),
+    # this is -30°. But PIL rotates around image center, which is also the pivot —
+    # exactly what we want since the hub of the wrench is near the center.
+    rotated = final_buf.rotate(-60, resample=Image.BICUBIC)
 
-    # Crop to SIZE x SIZE centered
     crop_x = (buf - SIZE) // 2
     crop_y = (buf - SIZE) // 2
-    cropped = rotated.crop((crop_x, crop_y, crop_x + SIZE, crop_y + SIZE))
-    return cropped
+    return rotated.crop((crop_x, crop_y, crop_x + SIZE, crop_y + SIZE))
 
 
-def clip_to_alpha(rgba_img: Image.Image, alpha: Image.Image) -> Image.Image:
-    """Multiply the rgba_img's alpha channel by the supplied alpha mask."""
-    from PIL import ImageChops
-    src_a = rgba_img.split()[3]
-    new_a = ImageChops.multiply(src_a, alpha)
-    out = rgba_img.copy()
-    out.putalpha(new_a)
-    return out
+def draw_hub() -> Image.Image:
+    layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    cx, cy = SIZE / 2, SIZE / 2
+    outer = SIZE * 0.030
+    inner = SIZE * 0.014
+    d.ellipse([cx - outer, cy - outer, cx + outer, cy + outer], fill=HUB_DARK)
+    d.ellipse([cx - inner, cy - inner, cx + inner, cy + inner], fill=WRENCH)
+    return layer
 
-
-# ---------- main ----------
 
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    bg = draw_background()                 # RGB
+    bg = draw_background()
     overlay = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    overlay.alpha_composite(draw_book())
-    overlay.alpha_composite(draw_wrench(angle_deg=-30))
+    overlay.alpha_composite(draw_clock_face())
+    overlay.alpha_composite(draw_minute_hand())
+    overlay.alpha_composite(draw_wrench_hand())
+    overlay.alpha_composite(draw_hub())
 
     final = Image.alpha_composite(bg.convert("RGBA"), overlay).convert("RGB")
     final.save(OUT_PATH, "PNG", optimize=True)
