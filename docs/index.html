@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Garage Time — Privacy & Support</title>
+<style>
+  :root {
+    --bg: #0E0E10;
+    --bg2: #17171B;
+    --text: #ECECEE;
+    --muted: #9D9DA5;
+    --accent: #FF6B35;
+    --rule: #2A2A30;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 96px; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+  .logo {
+    width: 40px; height: 40px; border-radius: 9px;
+    background: var(--accent);
+    display: grid; place-items: center;
+    color: #0E0E10; font-weight: 800;
+  }
+  h1 { font-size: 28px; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 20px; margin-top: 40px; color: var(--accent); }
+  h3 { font-size: 16px; margin-top: 24px; color: var(--text); }
+  p, li { color: var(--text); }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+  hr { border: none; border-top: 1px solid var(--rule); margin: 32px 0; }
+  .nav { display: flex; gap: 24px; margin-bottom: 8px; }
+  .nav a { font-weight: 600; text-decoration: none; }
+  .nav a:hover { text-decoration: underline; }
+  code { background: var(--bg2); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  footer { color: var(--muted); margin-top: 64px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">W</div>
+    <h1>Garage Time</h1>
+  </header>
+
+  <nav class="nav">
+    <a href="#privacy">Privacy</a>
+    <a href="#support">Support</a>
+    <a href="#terms">Terms</a>
+  </nav>
+  <p class="muted">Track vehicles, quote work, get paid.</p>
+
+  <hr>
+
+  <section id="privacy">
+    <h2>Privacy Policy</h2>
+    <p class="muted">Last updated: 2026-05-19</p>
+
+    <h3>The short version</h3>
+    <p>Garage Time stores your vehicle, customer, and service data in your private iCloud account. Nothing is sent to our servers because we don't have any. We do not sell, share, or analyze your data.</p>
+
+    <h3>What we collect</h3>
+    <ul>
+      <li><strong>Vehicle & service data</strong> you enter (vehicles, customers, parts, service records, quotes, photos) — stored locally and synced through your iCloud account using Apple's CloudKit.</li>
+      <li><strong>Anonymous crash reports</strong> through Apple's standard crash reporting, if you opt in via iOS Settings → Privacy & Security → Analytics & Improvements.</li>
+      <li><strong>Purchase history</strong> for in-app subscriptions, handled entirely by Apple's App Store. Garage Time receives only the entitlement status.</li>
+    </ul>
+
+    <h3>What we do NOT collect</h3>
+    <ul>
+      <li>Your name, email, phone, or address.</li>
+      <li>Location.</li>
+      <li>Contacts, calendar, or other personal data outside the app.</li>
+      <li>Browsing or usage analytics (no Mixpanel, no Amplitude, no Google Analytics).</li>
+      <li>Anything sent to a third party for advertising.</li>
+    </ul>
+
+    <h3>Third parties</h3>
+    <ul>
+      <li><strong>Apple iCloud (CloudKit)</strong> — syncs your data between your devices. Governed by <a href="https://www.apple.com/legal/privacy/">Apple's privacy policy</a>.</li>
+      <li><strong>NHTSA vPIC API</strong> — when you scan a VIN, the 17-character VIN is sent to the U.S. government's vehicle decoder service to look up year/make/model. No personal info goes with it.</li>
+      <li><strong>Apple App Store</strong> — for in-app purchases and subscription management.</li>
+    </ul>
+
+    <h3>Your data, your control</h3>
+    <ul>
+      <li><strong>Export</strong>: Settings → Data → Export All exports your full dataset as JSON.</li>
+      <li><strong>Delete</strong>: Settings → Data → Erase All permanently removes your data from this device. To remove iCloud copies, use iOS Settings → Apple ID → iCloud → Manage Storage → Garage Time → Delete Data.</li>
+      <li>Garage Time does not require an account. There is nothing for us to "delete" because we never had it.</li>
+    </ul>
+
+    <h3>Contact</h3>
+    <p>Privacy questions: <a href="mailto:privacy@wrenchbook.app">privacy@wrenchbook.app</a></p>
+  </section>
+
+  <hr>
+
+  <section id="support">
+    <h2>Support</h2>
+    <p>Email: <a href="mailto:support@wrenchbook.app">support@wrenchbook.app</a></p>
+    <p>We reply within 2 business days. Include your iOS version and what you were doing when the issue happened.</p>
+
+    <h3>Common questions</h3>
+
+    <h3>Where is my data?</h3>
+    <p>On your device, with optional iCloud sync. We do not have a server.</p>
+
+    <h3>Will my data sync to my iPad/Mac?</h3>
+    <p>Yes — as long as both devices are signed into the same iCloud account, and iCloud Drive is enabled in iOS Settings.</p>
+
+    <h3>I cancelled my subscription. What happens?</h3>
+    <p>Your existing data remains. You drop to the Free tier limits (1 personal vehicle, no PDF export, no customers).</p>
+
+    <h3>How do I restore a purchase?</h3>
+    <p>Settings → Subscription → Restore Purchases. You must be signed in with the same Apple ID you originally purchased on.</p>
+  </section>
+
+  <hr>
+
+  <section id="terms">
+    <h2>Terms of Service</h2>
+    <p class="muted">Last updated: 2026-05-19</p>
+
+    <h3>The short version</h3>
+    <p>Garage Time is provided as-is. We are not liable for errors in vehicle records, missed maintenance reminders, or anything else that might go wrong because of using this app. You're responsible for your data, your vehicles, and your customers.</p>
+
+    <h3>Subscriptions</h3>
+    <p>Garage Time offers monthly and yearly subscriptions through Apple. Payment is charged to your Apple ID. Subscriptions auto-renew unless cancelled at least 24 hours before the renewal date. Manage or cancel in iOS Settings → Your Apple ID → Subscriptions.</p>
+
+    <h3>Refunds</h3>
+    <p>All refunds are handled by Apple per their <a href="https://support.apple.com/en-us/HT204084">refund policy</a>. We can't issue refunds directly.</p>
+
+    <h3>Changes</h3>
+    <p>We may update these terms. We'll bump the date at the top and announce significant changes in the app.</p>
+  </section>
+
+  <footer>
+    <p>© Henry Gawelek · Garage Time is a trademark of Henry Gawelek.</p>
+  </footer>
+</div>
+</body>
+</html>

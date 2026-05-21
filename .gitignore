@@ -1,0 +1,53 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+*.xcuserdata
+xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Generated Xcode project (regenerate from project.yml)
+GarageTime.xcodeproj
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.pins
+Package.resolved
+
+# CocoaPods (not used, but defensive)
+Pods/
+
+# Carthage (not used)
+Carthage/Build/
+
+# fastlane (not used yet)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Secrets — never commit
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+ExportOptions-private.plist
+.env
+.env.*
+~/.garagetime-*
+
+# OCR / receipt scratch
+scratch/
+*.log
